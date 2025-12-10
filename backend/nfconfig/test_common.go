@@ -28,6 +28,7 @@ func makeDeviceGroup(p deviceGroupParams) (string, configmodels.DeviceGroups) {
 				DnsPrimary: p.dnsPrimary,
 				UeIpPool:   p.ueIpPool,
 				Mtu:        p.mtu,
+				UeDnnQos:   p.qos,
 			},
 		},
 	}

@@ -546,16 +546,27 @@ func (c *inMemoryConfig) syncImsiQos(deviceGroupMap map[string]configmodels.Devi
 }
 
 func extractQosConfigFromDeviceGroup(group configmodels.DeviceGroups) nfConfigApi.ImsiQos {
+	if group.IpDomainExpanded == nil || len(group.IpDomainExpanded) == 0 {
+		return nfConfigApi.ImsiQos{}
+	}
+
 	for _, ipDomain := range group.IpDomainExpanded {
+
+		// Ensure QoS exists
+		if ipDomain.UeDnnQos == nil || ipDomain.UeDnnQos.TrafficClass == nil {
+			continue
+		}
+
 		qos := nfConfigApi.NewImsiQos(
 			configapi.ConvertToString(uint64(ipDomain.UeDnnQos.DnnMbrUplink)),
 			configapi.ConvertToString(uint64(ipDomain.UeDnnQos.DnnMbrDownlink)),
 			ipDomain.UeDnnQos.TrafficClass.Qci,
 			ipDomain.UeDnnQos.TrafficClass.Arp,
 		)
+
 		return *qos
 	}
 
-	// no entries — return empty struct
+	// No valid QoS entries
 	return nfConfigApi.ImsiQos{}
 }
