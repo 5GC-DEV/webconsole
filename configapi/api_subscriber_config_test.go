@@ -936,12 +936,14 @@ func deviceGroupWithImsis(name string, imsis []string) configmodels.DeviceGroups
 		Pdb:  300,
 		Pelr: 6,
 	}
+
 	qos := configmodels.DeviceGroupsIpDomainExpandedUeDnnQos{
 		DnnMbrUplink:   10000000,
 		DnnMbrDownlink: 10000000,
 		BitrateUnit:    "kbps",
 		TrafficClass:   &trafficClass,
 	}
+
 	ipDomain := configmodels.DeviceGroupsIpDomainExpanded{
 		Dnn:          "internet",
 		UeIpPool:     "172.250.1.0/16",
@@ -950,12 +952,16 @@ func deviceGroupWithImsis(name string, imsis []string) configmodels.DeviceGroups
 		Mtu:          1460,
 		UeDnnQos:     &qos,
 	}
+
 	deviceGroup := configmodels.DeviceGroups{
-		DeviceGroupName:  name,
-		Imsis:            imsis,
-		SiteInfo:         "demo",
-		IpDomainName:     "pool1",
-		IpDomainExpanded: ipDomain,
+		DeviceGroupName: name,
+		Imsis:           imsis,
+		SiteInfo:        "demo",
+		IpDomainName:    "pool1",
+		IpDomainExpanded: []configmodels.DeviceGroupsIpDomainExpanded{
+			ipDomain,
+		},
 	}
+
 	return deviceGroup
 }
