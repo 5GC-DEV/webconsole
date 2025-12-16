@@ -491,7 +491,7 @@ func getSupportedDnns(slice configmodels.Slice, deviceGroups map[string]configmo
 	return dnns
 }
 
-func buildPccQos(ruleConfig configmodels.SliceApplicationFilteringRules) nfConfigApi.PccQos {
+/*func buildPccQos(ruleConfig configmodels.SliceApplicationFilteringRules) nfConfigApi.PccQos {
 	pccQos := nfConfigApi.NewPccQos(
 		ruleConfig.TrafficClass.Qci,
 		*nfConfigApi.NewArp(
@@ -506,6 +506,22 @@ func buildPccQos(ruleConfig configmodels.SliceApplicationFilteringRules) nfConfi
 	if ruleConfig.AppMbrDownlink != 0 {
 		pccQos.SetMaxBrDl(configapi.ConvertToString(uint64(ruleConfig.AppMbrDownlink)))
 	}
+	return *pccQos
+}*/
+
+func buildPccQos(ruleConfig configmodels.SliceApplicationFilteringRules) nfConfigApi.PccQos {
+	pccQos := nfConfigApi.NewPccQos(
+		ruleConfig.TrafficClass.Qci,
+		// configapi.ConvertToString(uint64(ruleConfig.AppMbrUplink)),
+		// configapi.ConvertToString(uint64(ruleConfig.AppMbrDownlink)),
+		*nfConfigApi.NewArp(
+			ruleConfig.TrafficClass.Arp,
+			nfConfigApi.PREEMPTCAP_MAY_PREEMPT,
+			nfConfigApi.PREEMPTVULN_PREEMPTABLE,
+		),
+	)
+	pccQos.SetMaxBrUl(configapi.ConvertToString(uint64(ruleConfig.AppMbrUplink)))
+	pccQos.SetMaxBrDl(configapi.ConvertToString(uint64(ruleConfig.AppMbrDownlink)))
 	return *pccQos
 }
 
