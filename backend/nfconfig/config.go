@@ -390,7 +390,20 @@ func buildPolicyControlConfig(slice configmodels.Slice, deviceGroups map[string]
 	pccRules := buildSlicePccRules(slice)
 	dnns := getSupportedDnns(slice, deviceGroups)
 	policyControl := nfConfigApi.NewPolicyControl(*plmn, snssai, dnns, pccRules)
+	logger.NfConfigLog.Infof(
+		"PolicyControl build slice=%s snssai=%+v dnns=%v pccRules=%d",
+		slice.SliceName,
+		snssai,
+		dnns,
+		len(pccRules),
+	)
 
+	if len(dnns) > 1 && len(pccRules) == 1 {
+		logger.NfConfigLog.Warnf(
+			"Multiple DNNs detected (%v) but only one PCC rule present. QoS may be incorrectly shared across DNNs",
+			dnns,
+		)
+	}
 	return policyControl, true
 }
 
@@ -510,18 +523,28 @@ func getSupportedDnns(slice configmodels.Slice, deviceGroups map[string]configmo
 }*/
 
 func buildPccQos(ruleConfig configmodels.SliceApplicationFilteringRules) nfConfigApi.PccQos {
+
+	logger.NfConfigLog.Infof(
+		"Building PCC QoS ruleId=%s qci=%d ul=%d dl=%d arp=%d",
+		ruleConfig.RuleName,
+		ruleConfig.TrafficClass.Qci,
+		ruleConfig.AppMbrUplink,
+		ruleConfig.AppMbrDownlink,
+		ruleConfig.TrafficClass.Arp,
+	)
+
 	pccQos := nfConfigApi.NewPccQos(
 		ruleConfig.TrafficClass.Qci,
-		// configapi.ConvertToString(uint64(ruleConfig.AppMbrUplink)),
-		// configapi.ConvertToString(uint64(ruleConfig.AppMbrDownlink)),
 		*nfConfigApi.NewArp(
 			ruleConfig.TrafficClass.Arp,
 			nfConfigApi.PREEMPTCAP_MAY_PREEMPT,
 			nfConfigApi.PREEMPTVULN_PREEMPTABLE,
 		),
 	)
+
 	pccQos.SetMaxBrUl(configapi.ConvertToString(uint64(ruleConfig.AppMbrUplink)))
 	pccQos.SetMaxBrDl(configapi.ConvertToString(uint64(ruleConfig.AppMbrDownlink)))
+
 	return *pccQos
 }
 
