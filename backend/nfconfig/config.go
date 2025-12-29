@@ -414,27 +414,33 @@ func buildSlicePccRules(slice configmodels.Slice) []nfConfigApi.PccRule {
 	TODO: Remove this comment once Device Group validation is implemented.
 	*/
 	pccRules := []nfConfigApi.PccRule{}
-
-	for _, ruleConfig := range slice.ApplicationFilteringRules {
+	logger.NfConfigLog.Infof("Building PCC rules for slice [%s], configured rules count [%d]", slice.SliceName, len(slice.ApplicationFilteringRules))
+	for idx, ruleConfig := range slice.ApplicationFilteringRules {
 		ruleId := ruleConfig.RuleName
 		flows := buildPccFlows(ruleConfig)
 		qos := buildPccQos(ruleConfig)
 		precedence := ruleConfig.Priority
-
+		logger.NfConfigLog.Infof("PCC rule [%d] for slice [%s]: RuleId [%s], Precedence [%d], Flows [%d]", idx, slice.SliceName, ruleId, precedence, len(flows))
 		pccRule := nfConfigApi.NewPccRule(ruleId, flows, qos, precedence)
 		pccRules = append(pccRules, *pccRule)
 	}
 
 	// If slice has no PCC rules, add a default one
 	if len(pccRules) == 0 {
+		logger.NfConfigLog.Warnf("No PCC rules configured for slice [%s], applying default PCC rule", slice.SliceName)
 		pccRules = append(pccRules, *defaultPccRule)
 	}
+	logger.NfConfigLog.Infof("Sorting PCC rules for slice [%s], total rules [%d]", slice.SliceName, len(pccRules))
 	sort.Slice(pccRules, func(i, j int) bool {
 		if pccRules[i].Precedence != pccRules[j].Precedence {
 			return pccRules[i].Precedence < pccRules[j].Precedence
 		}
 		return pccRules[i].RuleId < pccRules[j].RuleId
 	})
+	// Log final PCC rule order
+	for idx, rule := range pccRules {
+		logger.NfConfigLog.Infof("Final PCC rule order [%d] for slice [%s]: RuleId [%s], Precedence [%d]", idx, slice.SliceName, rule.RuleId, rule.Precedence)
+	}
 	return pccRules
 }
 
