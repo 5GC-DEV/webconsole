@@ -169,7 +169,16 @@ func (n *NFConfigServer) syncInMemoryConfig() error {
 		}
 		slices = append(slices, s)
 	}
-	logger.NfConfigLog.Debugf("Retrieved %d network slices", len(slices))
+	logger.NfConfigLog.Infof("Retrieved %d network slices", len(slices))
+
+	for i, s := range slices {
+		b, err := json.MarshalIndent(s, "", "  ")
+		if err != nil {
+			logger.NfConfigLog.Warnf("Failed to marshal slice %d (%s) for logging: %v", i, s.SliceName, err)
+			continue
+		}
+		logger.NfConfigLog.Infof("Slice[%d] data:\n%s", i, string(b))
+	}
 
 	rawDeviceGroups, err := dbadapter.CommonDBClient.RestfulAPIGetMany(devGroupDataColl, bson.M{})
 	if err != nil {
@@ -189,7 +198,7 @@ func (n *NFConfigServer) syncInMemoryConfig() error {
 		}
 		deviceGroups[dg.DeviceGroupName] = dg
 	}
-	logger.NfConfigLog.Debugf("Parsed %d device groups", len(deviceGroups))
+	logger.NfConfigLog.Infof("Parsed %d device groups", len(deviceGroups))
 
 	n.inMemoryConfig.syncPlmn(slices)
 	n.inMemoryConfig.syncPlmnSnssai(slices)
